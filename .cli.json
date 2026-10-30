@@ -14,7 +14,12 @@
         "go",
         "dotnet",
         "node-typescript"
-      ]
+      ],
+      "clientEnvOverrides": {
+        "react-cra": {
+          "DOMAIN": "http://localhost:3000"
+        }
+      }
     },
     {
       "name": "prebuilt-checkout-page",
@@ -27,7 +32,15 @@
         "java",
         "go",
         "dotnet"
-      ]
+      ],
+      "clientEnvOverrides": {
+        "react-cra": {
+          "DOMAIN": "http://localhost:3000"
+        },
+        "vue-cva": {
+          "DOMAIN": "http://localhost:3000"
+        }
+      }
     },
     {
       "name": "custom-payment-flow",
@@ -41,7 +54,30 @@
         "go",
         "dotnet",
         "node-typescript"
-      ]
+      ],
+      "clientEnvOverrides": {
+        "react-cra": {
+          "DOMAIN": "http://localhost:3000"
+        }
+      }
+    },
+    {
+      "name": "elements-with-checkout-sessions",
+      "clients": ["html", "react-cra"],
+      "servers": [
+        "ruby",
+        "node",
+        "python",
+        "php",
+        "java",
+        "go",
+        "dotnet"
+      ],
+      "clientEnvOverrides": {
+        "react-cra": {
+          "DOMAIN": "http://localhost:3000"
+        }
+      }
     }
   ]
 }

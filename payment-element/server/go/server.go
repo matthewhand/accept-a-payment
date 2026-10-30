@@ -11,9 +11,9 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
-	"github.com/stripe/stripe-go/v72"
-	"github.com/stripe/stripe-go/v72/paymentintent"
-	"github.com/stripe/stripe-go/v72/webhook"
+	"github.com/stripe/stripe-go/v84"
+	"github.com/stripe/stripe-go/v84/paymentintent"
+	"github.com/stripe/stripe-go/v84/webhook"
 )
 
 func main() {
@@ -22,6 +22,11 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
+	// Don't put any keys in code. Use an environment variable (as shown
+	// here) or secrets vault to supply keys to your integration.
+	//
+	// See https://docs.stripe.com/keys-best-practices and find your
+	// keys at https://dashboard.stripe.com/apikeys.
 	stripe.Key = os.Getenv("STRIPE_SECRET_KEY")
 
 	// For sample support and debugging, not required for production:

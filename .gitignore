@@ -17,6 +17,7 @@ vendor
 # Python files
 __pycache__
 venv
+.venv
 env
 
 # PHP files
@@ -132,7 +133,9 @@ yarn*
 # E2E test
 #
 # We can run the E2E testing script, but sometime it remain several files.
-docker-compose*
-sample-ci/
 
 playwright/test-results/
+
+# Terraform files
+.terraform*
+terraform.tfstate*.playwright-mcp/

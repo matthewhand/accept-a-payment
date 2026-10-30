@@ -17,6 +17,11 @@ builder.Services.Configure<StripeOptions>(options =>
 });
 var app = builder.Build();
 
+// Don't put any keys in code. Use an environment variable (as shown
+// here) or secrets vault to supply keys to your integration.
+//
+// See https://docs.stripe.com/keys-best-practices and find your
+// keys at https://dashboard.stripe.com/apikeys.
 StripeConfiguration.ApiKey = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY");
 
 StripeConfiguration.AppInfo = new AppInfo
@@ -110,7 +115,7 @@ app.MapPost("webhook", async (HttpRequest req, IOptions<StripeOptions> options) 
         return Results.BadRequest();
     }
 
-    if (stripeEvent.Type == Events.CheckoutSessionCompleted)
+    if (stripeEvent.Type == "checkout.session.completed")
     {
         var session = stripeEvent.Data.Object as Stripe.Checkout.Session;
         app.Logger.LogInformation($"Session ID: {session.Id}");

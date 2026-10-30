@@ -47,9 +47,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const nameInput = document.querySelector('#name');
 
-    // Confirm the idealBank payment given the clientSecret
-    // from the payment intent that was just created on
-    // the server.
+    // Confirm the payment given the clientSecret from
+    // the payment intent that was just created on the
+    // server.
     let {error: stripeError, paymentIntent} = await stripe.confirmIdealPayment(
       clientSecret,
       {
