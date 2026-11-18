@@ -2,7 +2,7 @@
 
 ## Requirements
 
-- Go 1.13
+- Go 1.20 or later
 - [Configured .env file](../../README.md)
 
 ## How to run

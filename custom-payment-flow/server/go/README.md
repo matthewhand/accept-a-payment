@@ -7,7 +7,7 @@ You can [🎥 watch a video](https://www.youtube.com/watch?v=cbsCxLDL4EY) to see
 
 ## Requirements
 
-- Go 1.13
+- Go 1.20 or later
 - [Configured .env file](../../README.md)
 
 ## How to run
