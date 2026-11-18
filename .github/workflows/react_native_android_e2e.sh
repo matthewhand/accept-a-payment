@@ -27,6 +27,7 @@ curl --silent --show-error --fail --retry 60 --retry-delay 2 --retry-connrefused
   http://localhost:8081/status >/dev/null
 for attempt in {1..60}; do
   if adb shell pm path host.exp.exponent | grep -q '^package:'; then
+    adb reverse tcp:8081 tcp:8081
     npm run test:android
     exit
   fi
