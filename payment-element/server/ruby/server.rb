@@ -3,6 +3,9 @@ require 'sinatra'
 require 'dotenv'
 require './config_helper.rb'
 
+# Disable Rack::Protection to allow proxied requests
+disable :protection
+
 # Copy the .env.example in the root into a .env file in this folder
 Dotenv.load
 ConfigHelper.check_env!
@@ -14,6 +17,11 @@ Stripe.set_app_info(
   url: 'https://github.com/stripe-samples'
 )
 Stripe.api_version = '2020-08-27'
+# Don't put any keys in code. Use an environment variable (as shown
+# here) or secrets vault to supply keys to your integration.
+#
+# See https://docs.stripe.com/keys-best-practices and find your
+# keys at https://dashboard.stripe.com/apikeys.
 Stripe.api_key = ENV['STRIPE_SECRET_KEY']
 
 set :static, true

@@ -15,12 +15,19 @@ Stripe.set_app_info(
   url: 'https://github.com/stripe-samples'
 )
 Stripe.api_version = '2020-08-27'
+# Don't put any keys in code. Use an environment variable (as shown
+# here) or secrets vault to supply keys to your integration.
+#
+# See https://docs.stripe.com/keys-best-practices and find your
+# keys at https://dashboard.stripe.com/apikeys.
 Stripe.api_key = ENV['STRIPE_SECRET_KEY']
 
 set :static, true
 set :public_folder, File.join(File.dirname(__FILE__), ENV['STATIC_DIR'])
 set :port, 4242
 set :bind, '0.0.0.0'
+set :protection, except: [:json_csrf]
+set :host_authorization, permitted_hosts: []
 
 get '/' do
   content_type 'text/html'

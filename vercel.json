@@ -1,0 +1,9 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "git": {
+    "deploymentEnabled": {
+      "security/sync-stripe-upstream-20261118": false,
+      "security/remediate-stripe-samples-20261118": false
+    }
+  }
+}
