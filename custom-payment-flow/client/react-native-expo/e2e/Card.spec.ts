@@ -1,57 +1,40 @@
+import {expect} from '@wdio/globals';
 import {
   launchApp,
-  dismissDevDialog,
   takeScreenshot,
   elementByText,
   elementByResourceId,
-  clickOn,
-  fillIn
 } from './helpers';
 
 describe('Payment with card', () => {
-  before(async () => {
-    await dismissDevDialog();
-  });
-
-  beforeEach(async () => {
-    await launchApp();
-  });
+  beforeEach(launchApp);
 
   afterEach(async function () {
-    if (this.currentTest && !this.currentTest.isPassed) {
+    if (this.currentTest?.state === 'failed') {
       await takeScreenshot(this.currentTest.fullTitle().replace(/\s+/g, '_'));
     }
   });
 
-  it("Happy path", async () => {
-    await clickOn(elementByText("Card"));
-    await fillIn(elementByText("Name"), "Saul Goodman");
-    await fillIn(elementByResourceId("card_number_edit_text"), "4242424242424242");
+  async function payWithCard(number: string) {
+    await elementByText('Card').click();
+    await elementByText('Name').setValue('Stripe Test');
+    await elementByResourceId('card_number_edit_text').setValue(number);
+    const futureYear = (new Date().getFullYear() + 2).toString().slice(-2);
+    await elementByResourceId('expiry_date_edit_text').setValue(`12/${futureYear}`);
+    await elementByResourceId('cvc_edit_text').setValue('123');
+    await elementByResourceId('postal_code_edit_text').setValue('10001');
+    await elementByText('PAY').click();
+  }
 
-    await fillIn(elementByResourceId("expiry_date_edit_text"), "12/25");
-    await fillIn(elementByResourceId("cvc_edit_text"), "123");
-
-    await fillIn(elementByResourceId("postal_code_edit_text"), "1000");
-
-    await clickOn(elementByText("PAY"));
-
-    expect(await elementByText("The payment was confirmed successfully")).toBeDisplayed();
-    await clickOn(elementByText("OK"));
+  it('confirms a valid test card', async () => {
+    await payWithCard('4242424242424242');
+    await expect(elementByText('Success')).toBeDisplayed();
+    await elementByText('OK').click();
   });
 
-  it("Failure path", async () => {
-    await clickOn(elementByText("Card"));
-    await fillIn(elementByText("Name"), "Saul Goodman");
-    await fillIn(elementByResourceId("card_number_edit_text"), "4000000000000101");
-
-    await fillIn(elementByResourceId("expiry_date_edit_text"), "12/25");
-    await fillIn(elementByResourceId("cvc_edit_text"), "123");
-
-    await fillIn(elementByResourceId("postal_code_edit_text"), "1000");
-
-    await clickOn(elementByText("PAY"));
-
-    expect(await elementByText("Error code:")).toBeDisplayed();
-    await clickOn(elementByText("OK"));
+  it('shows an error for a declined test card', async () => {
+    await payWithCard('4000000000000002');
+    await expect(elementByText('Error code: Failed')).toBeDisplayed();
+    await elementByText('OK').click();
   });
 });

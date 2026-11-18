@@ -8,10 +8,7 @@ import {
   Button,
 } from 'react-native';
 import {CardField, useConfirmPayment} from '@stripe/stripe-react-native';
-import type {
-  CardFieldInput,
-  PaymentMethodCreateParams,
-} from '@stripe/stripe-react-native';
+import type {CardFieldInput} from '@stripe/stripe-react-native';
 import {colors} from './colors';
 import {API_URL} from './Config';
 
@@ -30,34 +27,41 @@ export default function Card() {
         currency: 'usd',
       }),
     });
-    const {clientSecret} = await response.json();
+    if (!response.ok) {
+      throw new Error('Could not create a PaymentIntent.');
+    }
 
+    const {clientSecret} = await response.json();
+    if (typeof clientSecret !== 'string' || !clientSecret) {
+      throw new Error('The server did not return a payment client secret.');
+    }
     return clientSecret;
   };
 
   const handlePayPress = async () => {
-    // 1. fetch Intent Client Secret from backend
-    const clientSecret = await fetchPaymentIntentClientSecret();
-
-    // 2. Gather customer billing information (ex. email)
-    const billingDetails: PaymentMethodCreateParams.BillingDetails = {
-      name,
-    };
+    let clientSecret: string;
+    try {
+      clientSecret = await fetchPaymentIntentClientSecret();
+    } catch (error) {
+      Alert.alert(
+        'Error',
+        error instanceof Error ? error.message : 'Could not start the payment.'
+      );
+      return;
+    }
 
     const {error, paymentIntent} = await confirmPayment(clientSecret, {
-      type: 'Card',
-      billingDetails,
+      paymentMethodType: 'Card',
+      paymentMethodData: {billingDetails: {name}},
     });
 
     if (error) {
       Alert.alert(`Error code: ${error.code}`, error.message);
-      console.log('Payment confirmation error', error.message);
     } else if (paymentIntent) {
       Alert.alert(
         'Success',
         `The payment was confirmed successfully! currency: ${paymentIntent.currency}`
       );
-      console.log('Success from promise', paymentIntent);
     }
   };
 
@@ -81,12 +85,7 @@ export default function Card() {
         placeholder={{
           number: '4242 4242 4242 4242',
         }}
-        onCardChange={(cardDetails) => {
-          console.log('cardDetails', cardDetails);
-        }}
-        onFocus={(focusedField) => {
-          console.log('focusField', focusedField);
-        }}
+
         cardStyle={inputStyles}
         style={styles.cardField}
       />

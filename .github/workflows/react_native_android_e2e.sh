@@ -1,39 +1,37 @@
-#!/bin/bash -e
+#!/usr/bin/env bash
+set -euo pipefail
 
-function killBackgroundJobs() {
-  set +e
-  kill $(jobs -p)
-  kill $(ps -e | grep 'bin/expo' | grep -v grep | awk '{ print $1 }')
+cleanup() {
+  local pid
+  for pid in $(jobs -p); do
+    kill "$pid" 2>/dev/null || true
+  done
 }
+trap cleanup EXIT
 
-trap killBackgroundJobs EXIT
-
-# Don't put any keys in code. Use an environment variable (as shown
-# here) or secrets vault to supply keys to your integration.
-#
-# See https://docs.stripe.com/keys-best-practices and find your
-# keys at https://dashboard.stripe.com/apikeys.
-export STRIPE_WEBHOOK_SECRET=$(stripe listen --api-key $STRIPE_SECRET_KEY --print-secret)
-stripe listen --forward-to http://localhost:4242/webhook &
+export DOMAIN="http://10.0.2.2:4242"
+export PAYMENT_METHOD_TYPES="card"
+export STATIC_DIR="../../client/html"
 
 cd custom-payment-flow/server/node
-cat <<EOF >> .env
-DOMAIN="http://10.0.2.2:4242"
-PRICE="$PRICE"
-PAYMENT_METHOD_TYPES="card"
-STATIC_DIR="../../client/html"
-EOF
-npm install
-npm start &
-curl -I --retry 30 --retry-delay 3 --retry-connrefused http://localhost:4242/
-cd -
+npm ci --no-audit --no-fund
+node server.js &
+curl --silent --show-error --fail --retry 30 --retry-delay 1 --retry-connrefused \
+  http://localhost:4242/config >/dev/null
 
-cd custom-payment-flow/client/react-native-expo
-mkdir -p tmp/screenshots
-npm install -g expo-cli
-yarn install --ignore-engines
-export REACT_NATIVE_PACKAGER_HOSTNAME=127.0.0.1
-(yarn run start -- --android --no-dev &) &
-sleep 30 # TODO: figure out how to wait for the app to start
+cd ../../client/react-native-expo
+npm ci --no-audit --no-fund
+node node_modules/expo/bin/cli start --go --android --localhost --port 8081 --max-workers 2 &
 
-yarn run wdio -- wdio.android.ts
+curl --silent --show-error --fail --retry 60 --retry-delay 2 --retry-connrefused \
+  http://localhost:8081/status >/dev/null
+for attempt in {1..60}; do
+  if adb shell pm path host.exp.exponent | grep -q '^package:'; then
+    npm run test:android
+    exit
+  fi
+  sleep 2
+done
+
+echo 'Expo Go did not install on the Android emulator.'
+exit 1

@@ -1,12 +1,14 @@
 import React from 'react';
 import {StyleSheet, ScrollView, View} from 'react-native';
-import {useNavigation} from '@react-navigation/native';
+import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {Collapse} from './components/Collapse';
 import ListItem from './components/ListItem';
 import {colors} from './colors';
+import type {RootStackParamList} from './App';
 
-export default function App() {
-  const navigation = useNavigation();
+export default function HomeScreen({
+  navigation,
+}: NativeStackScreenProps<RootStackParamList, 'Home'>) {
 
   return (
     <ScrollView accessibilityLabel="app-root" style={styles.container}>

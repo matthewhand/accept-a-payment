@@ -6,6 +6,7 @@ on:
       - fix-ci
     paths:
       - 'custom-payment-flow/**'
+      - '!custom-payment-flow/client/react-native-expo/**'
       - '!**/client/vue-cva/**'
       - '!**.css'
       - '!**.md'

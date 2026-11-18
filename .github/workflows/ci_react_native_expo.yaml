@@ -1,0 +1,38 @@
+name: React Native Expo checks
+
+on:
+  pull_request:
+    paths:
+      - 'custom-payment-flow/client/react-native-expo/**'
+      - '.github/workflows/ci_react_native_expo.yaml'
+  push:
+    branches: [main]
+    paths:
+      - 'custom-payment-flow/client/react-native-expo/**'
+      - '.github/workflows/ci_react_native_expo.yaml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  expo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: custom-payment-flow/client/react-native-expo
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.22.3'
+      - run: npm ci --no-audit --no-fund
+      - run: npm audit --audit-level=high
+      - run: npm run typecheck
+      - name: Export the Android bundle
+        run: npx --no-install expo export --platform android --max-workers 2
+      - name: Export the iOS bundle
+        run: npx --no-install expo export --platform ios --max-workers 2
