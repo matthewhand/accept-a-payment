@@ -1,8 +1,7 @@
-import React, {useEffect, useState, useCallback} from 'react';
-import 'react-native-gesture-handler';
-import {StatusBar, StyleSheet} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {ActivityIndicator, StatusBar, StyleSheet, Text, View} from 'react-native';
 import {NavigationContainer} from '@react-navigation/native';
-import {createStackNavigator} from '@react-navigation/stack';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {StripeProvider, useStripe} from '@stripe/stripe-react-native';
 import * as Linking from 'expo-linking';
 import HomeScreen from './HomeScreen';
@@ -10,83 +9,76 @@ import Card from './Card';
 import {colors} from './colors';
 import {fetchPublishableKey} from './helpers';
 
-const Stack = createStackNavigator();
+export type RootStackParamList = {
+  Home: undefined;
+  Card: undefined;
+};
+
+const Stack = createNativeStackNavigator<RootStackParamList>();
+const stripeUrlScheme = 'accept-a-payment';
+
+function PaymentNavigation() {
+  const {handleURLCallback} = useStripe();
+  const url = Linking.useLinkingURL();
+
+  useEffect(() => {
+    if (url?.startsWith(stripeUrlScheme + '://safepay')) {
+      void handleURLCallback(url);
+    }
+  }, [url, handleURLCallback]);
+
+  return (
+    <NavigationContainer>
+      <Stack.Navigator
+        screenOptions={{
+          headerTintColor: colors.white,
+          headerStyle: {backgroundColor: colors.blurple},
+          headerShadowVisible: false,
+        }}
+      >
+        <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="Card" component={Card} />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}
 
 export default function App() {
-  const {handleURLCallback} = useStripe();
-  const [publishableKey, setPublishableKey] = useState('');
+  const [publishableKey, setPublishableKey] = useState<string | null>();
 
   useEffect(() => {
-    async function initialize() {
-      const publishableKey = await fetchPublishableKey();
-      if (publishableKey) {
-        setPublishableKey(publishableKey);
-      }
-    }
-    initialize();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    void fetchPublishableKey().then(setPublishableKey);
   }, []);
 
-  const handleDeepLink = useCallback(
-    async (url: string | null) => {
-      if (url && url.includes('safepay')) {
-        await handleURLCallback(url);
-      }
-    },
-    [handleURLCallback]
-  );
-
-  useEffect(() => {
-    const getUrlAsync = async () => {
-      const initialUrl = await Linking.getInitialURL();
-      handleDeepLink(initialUrl);
-    };
-
-    const urlCallback = (event: {url: string}) => {
-      handleDeepLink(event.url);
-    };
-
-    getUrlAsync();
-
-    Linking.addEventListener('url', urlCallback);
-
-    return () => Linking.removeEventListener('url', urlCallback);
-  }, [handleDeepLink]);
+  if (!publishableKey) {
+    return (
+      <View style={styles.center}>
+        {publishableKey === null ? (
+          <Text>Unable to load the Stripe publishable key. Check that the sample server is running.</Text>
+        ) : (
+          <ActivityIndicator accessibilityLabel="Loading the payment sample" />
+        )}
+      </View>
+    );
+  }
 
   return (
     <StripeProvider
       publishableKey={publishableKey}
-      merchantIdentifier="merchant.com.stripe.react.native"
-      urlScheme={Linking.createURL('') + '/--/'}
-      setUrlSchemeOnAndroid={true}
+      urlScheme={stripeUrlScheme}
+      setReturnUrlSchemeOnAndroid
     >
-      <StatusBar
-        backgroundColor={colors.blurple_dark}
-        barStyle="light-content"
-        translucent
-      />
-      <NavigationContainer>
-        <Stack.Navigator
-          screenOptions={{
-            headerTintColor: colors.white,
-            headerStyle: {
-              shadowOpacity: 0,
-              backgroundColor: colors.blurple,
-              borderBottomWidth: StyleSheet.hairlineWidth,
-              borderBottomColor: colors.slate,
-            },
-            headerTitleStyle: {
-              color: colors.white,
-            },
-            headerBackTitleStyle: {
-              color: colors.white,
-            },
-          }}
-        >
-          <Stack.Screen name="Home" component={HomeScreen} />
-          <Stack.Screen name="Card" component={Card} />
-        </Stack.Navigator>
-      </NavigationContainer>
+      <StatusBar barStyle="light-content" />
+      <PaymentNavigation />
     </StripeProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  center: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+  },
+});

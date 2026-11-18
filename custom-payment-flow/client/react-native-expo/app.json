@@ -3,6 +3,7 @@
     "name": "react-native-expo",
     "slug": "react-native-expo",
     "version": "1.0.0",
+    "platforms": ["ios", "android"],
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "splash": {
@@ -10,22 +11,17 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "updates": {
-      "fallbackToCacheTimeout": 0
-    },
-    "assetBundlePatterns": ["**/*"],
     "scheme": "accept-a-payment",
     "ios": {
+      "bundleIdentifier": "com.stripe.samples.acceptapayment",
       "supportsTablet": true
     },
     "android": {
+      "package": "com.stripe.samples.acceptapayment",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
       }
-    },
-    "web": {
-      "favicon": "./assets/favicon.png"
     }
   }
 }

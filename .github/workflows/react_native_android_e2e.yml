@@ -1,9 +1,9 @@
 name: React Native Android e2e tests
+
 on: workflow_dispatch
 
-env:
-  STRIPE_PUBLISHABLE_KEY: ${{ secrets.TEST_STRIPE_PUBLISHABLE_KEY }}
-  STRIPE_SECRET_KEY: ${{ secrets.TEST_STRIPE_SECRET_KEY }}
+permissions:
+  contents: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -11,39 +11,52 @@ concurrency:
 
 jobs:
   e2e_react_native_android:
-    runs-on: macos-11
-    env:
-      STRIPE_API_KEY: ${{ secrets.TEST_STRIPE_SECRET_KEY }}
-      PRICE: ${{ secrets.TEST_PRICE }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v2
-
-      - name: Setup dependencies
+      - name: Check for Stripe test credentials
+        id: credentials
+        env:
+          STRIPE_PUBLISHABLE_KEY: ${{ secrets.TEST_STRIPE_PUBLISHABLE_KEY }}
+          STRIPE_SECRET_KEY: ${{ secrets.TEST_STRIPE_SECRET_KEY }}
         run: |
-          curl -o- -L https://github.com/stripe/stripe-cli/releases/download/v1.7.0/stripe_1.7.0_mac-os_x86_64.tar.gz | sudo tar fxz - -C /usr/local/bin
+          if [[ "$STRIPE_PUBLISHABLE_KEY" == pk_test_* && "$STRIPE_SECRET_KEY" == sk_test_* ]]; then
+            echo 'available=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'Stripe test credentials are required to exercise card confirmation.' >> "$GITHUB_STEP_SUMMARY"
+          fi
 
-      - name: Run tests (1st attempt)
-        timeout-minutes: 15
-        continue-on-error: true
-        id: attempt1
-        uses: reactivecircus/android-emulator-runner@v2
+      - uses: actions/checkout@v4
+        if: steps.credentials.outputs.available == 'true'
         with:
-          api-level: 29
-          script: .github/workflows/react_native_android_e2e.sh
+          persist-credentials: false
 
-      - name: Run tests (2nd attempt)
-        timeout-minutes: 15
-        id: attempt2
-        if: steps.attempt1.outcome=='failure'
-        uses: reactivecircus/android-emulator-runner@v2
+      - uses: actions/setup-node@v4
+        if: steps.credentials.outputs.available == 'true'
         with:
-          api-level: 29
-          script: .github/workflows/react_native_android_e2e.sh
+          node-version: '24.22.3'
 
-      - name: Upload screenshots
-        if: ${{ failure() }}
-        uses: actions/upload-artifact@v4
+      - name: Enable KVM access
+        if: steps.credentials.outputs.available == 'true'
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Run the Android card tests
+        if: steps.credentials.outputs.available == 'true'
+        uses: reactivecircus/android-emulator-runner@v2
+        env:
+          STRIPE_PUBLISHABLE_KEY: ${{ secrets.TEST_STRIPE_PUBLISHABLE_KEY }}
+          STRIPE_SECRET_KEY: ${{ secrets.TEST_STRIPE_SECRET_KEY }}
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          script: bash .github/workflows/react_native_android_e2e.sh
+
+      - uses: actions/upload-artifact@v4
+        if: failure() && steps.credentials.outputs.available == 'true'
         with:
           name: react-native-android-screenshots
-          path: |
-            custom-payment-flow/client/react-native-expo/tmp/screenshots
+          path: custom-payment-flow/client/react-native-expo/tmp/screenshots
