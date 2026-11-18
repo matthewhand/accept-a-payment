@@ -82,7 +82,7 @@ export default function Card() {
         style={styles.input}
       />
       <CardField
-        placeholder={{
+        placeholders={{
           number: '4242 4242 4242 4242',
         }}
 
