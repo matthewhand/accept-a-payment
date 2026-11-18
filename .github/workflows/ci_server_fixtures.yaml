@@ -1,0 +1,57 @@
+name: Server tests with local Stripe fixtures
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  server_specs:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [node, python]
+        sample:
+          - custom-payment-flow
+          - elements-with-checkout-sessions
+          - payment-element
+          - prebuilt-checkout-page
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.4'
+          bundler-cache: true
+
+      - uses: actions/setup-node@v4
+        if: matrix.language == 'node'
+        with:
+          node-version: '22'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install sample dependencies
+        working-directory: ${{ matrix.sample }}/server/${{ matrix.language }}
+        env:
+          LANGUAGE: ${{ matrix.language }}
+        run: |
+          if [ "$LANGUAGE" = node ]; then
+            npm ci --no-audit --no-fund
+          else
+            python -m pip install -r requirements.txt
+          fi
+
+      - name: Run the existing server spec
+        env:
+          LANGUAGE: ${{ matrix.language }}
+          SAMPLE: ${{ matrix.sample }}
+        run: python spec/fixtures/run_server_specs.py "$LANGUAGE" "$SAMPLE"
