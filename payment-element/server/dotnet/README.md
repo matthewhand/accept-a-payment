@@ -6,7 +6,7 @@ You can [🎥 watch a video](https://www.youtube.com/watch?v=mqEjRgoZWdo) to see
 
 ## Requirements
 
-* .NET Core
+* .NET 10 SDK
 * [Configured .env file](../../README.md)
 
 ## How to run

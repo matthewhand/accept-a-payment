@@ -36,7 +36,7 @@ jobs:
 
       - name: Run tests
         # Only run elements-with-checkout-sessions on latest images (skip legacy versions)
-        if: ${{ matrix.target.sample != 'elements-with-checkout-sessions' || contains(fromJSON('["node:latest","node:lts","ruby:latest","python:latest","golang:latest","maven:latest","mcr.microsoft.com/dotnet/sdk:9.0"]'), inputs.server_image) }}
+        if: ${{ matrix.target.sample != 'elements-with-checkout-sessions' || contains(fromJSON('["node:latest","node:lts","ruby:latest","python:latest","golang:latest","maven:latest","mcr.microsoft.com/dotnet/sdk:10.0"]'), inputs.server_image) }}
         env:
           STRIPE_PUBLISHABLE_KEY: ${{ secrets.TEST_STRIPE_PUBLISHABLE_KEY }}
           STRIPE_SECRET_KEY: ${{ secrets.TEST_STRIPE_SECRET_KEY }}

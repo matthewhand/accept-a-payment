@@ -4,7 +4,7 @@ An [ASP.NET Core](https://dotnet.microsoft.com/apps/aspnet) server implementatio
 
 ## Requirements
 
-- .NET >= 9.0
+- .NET 10 SDK
 
 ## How to run
 

@@ -4,7 +4,7 @@ An [.NET Core](https://dotnet.microsoft.com/download/dotnet-core) implementation
 
 ## Requirements
 
-* .NET Core
+* .NET 10 SDK
 * [Configured .env file](../../README.md)
 
 ## How to run
